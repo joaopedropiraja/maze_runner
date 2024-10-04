@@ -6,7 +6,6 @@
 #include "array.h"
 #include "msgassert.h"
 
-
 int main(int argc, char* argv[]) {
     msgassert(argc == 2, "Use: %s <mazeFileName>\n", argv[0]);
 

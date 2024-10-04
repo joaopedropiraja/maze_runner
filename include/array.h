@@ -19,6 +19,7 @@ typedef struct {
     &(a)[arr_header(a)->length++])
 
 void *arr_create(size_t itemSize, size_t capacity);
+void arr_delete(void *a);
 void *arr_ensureCapacity(void *a, size_t itemCount, size_t itemSize);
 
 #endif // ARRAY_H
