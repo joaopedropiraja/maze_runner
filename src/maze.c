@@ -89,14 +89,13 @@ bool m_hasSolution(Maze *m) {
 
     while (!st_empty(s)) {
         Position sn = st_pop(s);
-        if (m->data[sn.row][sn.col] == 's') 
-            return true;
 
-        if (m->data[sn.row][sn.col] != 'e') 
-            m->data[sn.row][sn.col] = '.';
+        if (m->data[sn.row][sn.col] == 's') return true;
+
+        m->data[sn.row][sn.col] = '.';
 
         m_print(m);
-        sleep_ms(100);
+        sleep_ms(50);
 
         int row = sn.row + 1;
         int col = sn.col;
