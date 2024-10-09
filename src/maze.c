@@ -3,17 +3,18 @@
 #include <pthread.h>
 
 #include "maze.h"
-#include "stack.h"
 #include "msgassert.h"
 
-// Private functions declarations
-static Maze *m_create(unsigned rowsNum, unsigned colsNum);
-static bool m_isValidLocation(Maze *m, int row, int col);
-static void *walk(void *data);
+// Private declarations
 typedef struct thread_data_s {
     Maze *m;
     Position p;
 } ThreadData;
+
+static Maze *m_create(unsigned rowsNum, unsigned colsNum);
+static bool m_isValidLocation(Maze *m, int row, int col);
+static void tryThread(Maze *m, int row, int col);
+static void *walk(void *data);
 
 // Implementations
 
@@ -81,8 +82,8 @@ Maze *m_loadFromFile(char *fileName) {
 
 static bool m_isValidLocation(Maze *m, int row, int col) {
     if (
-        row < 0 || row >= (int)m->rowsNum || 
-        col < 0 || col >= (int)m->colsNum
+        row < 0 || (unsigned)row >= m->rowsNum || 
+        col < 0 || (unsigned)col >= m->colsNum
     ) return false;
 
     return m->data[row][col] == 'x' || m->data[row][col] == 's';
@@ -99,74 +100,47 @@ void m_print(Maze *m) {
     printf("\n\n");    
 };
 
+static void tryThread(Maze *m, int row, int col) {
+  if (!m_isValidLocation(m, row, col)) return;
+  
+  m->activeThreadsNum++;
+
+  ThreadData *threadData = malloc(sizeof(ThreadData));
+  threadData->m = m;
+  threadData->p = (Position){ row, col };
+  
+  pthread_t thread;
+  pthread_create(&thread, NULL, walk, threadData);
+  pthread_detach(thread);
+};
+
 static void *walk(void *data) {
+  sleep_ms(5);
+
   ThreadData *threadData = data;
-  if (threadData->m->data[threadData->p.row][threadData->p.col] == 's') {
-    threadData->m->foundExit = true;
-    threadData->m->activeThreadsNum--;
+
+  Maze *m = threadData->m;
+  Position p = threadData->p;
+  if (m->data[p.row][p.col] == 's') {
+    m->foundExit = true;
+    m->activeThreadsNum--;
 
     free(threadData);
     return NULL;
   }
 
-  sleep_ms(15);
-  threadData->m->data[threadData->p.row][threadData->p.col] = '.';
+  m->data[p.row][p.col] = '.';
 
-  int row = threadData->p.row + 1;
-  int col = threadData->p.col;
-  if (m_isValidLocation(threadData->m, row, col)) {
-    ThreadData *newThreadData1 = malloc(sizeof(ThreadData));
-    newThreadData1->m = threadData->m;
-    
-    pthread_t newThread1;
-    newThreadData1->p = (Position){ row, col };
+  // Direita
+  tryThread(m, p.row, p.col + 1);
+  // Esquerda
+  tryThread(m, p.row, p.col - 1);
+  // Em cima
+  tryThread(m, p.row + 1, p.col);
+  // Embaixo
+  tryThread(m, p.row - 1, p.col);    
 
-    threadData->m->activeThreadsNum++;
-    pthread_create(&newThread1, NULL, walk, newThreadData1);
-    pthread_detach(newThread1);
-  }
-
-  row = threadData->p.row - 1;
-  if (m_isValidLocation(threadData->m, row, col)) {
-    ThreadData *newThreadData2 = malloc(sizeof(ThreadData));
-    newThreadData2->m = threadData->m;
-
-    pthread_t newThread2;
-    newThreadData2->p = (Position){ row, col };
-
-    threadData->m->activeThreadsNum++;
-    pthread_create(&newThread2, NULL, walk, newThreadData2);
-    pthread_detach(newThread2);    
-  }
-
-  row = threadData->p.row;
-  col = threadData->p.col + 1;
-  if (m_isValidLocation(threadData->m, row, col)) {
-    ThreadData *newThreadData3 = malloc(sizeof(ThreadData));
-    newThreadData3->m = threadData->m;
-
-    pthread_t newThread3;
-    newThreadData3->p = (Position){ row, col };
-
-    threadData->m->activeThreadsNum++;
-    pthread_create(&newThread3, NULL, walk, newThreadData3);
-    pthread_detach(newThread3);    
-  }     
-
-  col = threadData->p.col - 1;
-  if (m_isValidLocation(threadData->m, row, col)) {
-    ThreadData *newThreadData4 = malloc(sizeof(ThreadData));
-    newThreadData4->m = threadData->m;
-
-    pthread_t newThread4;
-    newThreadData4->p = (Position){ row, col };
-
-    threadData->m->activeThreadsNum++;
-    pthread_create(&newThread4, NULL, walk, newThreadData4);
-    pthread_detach(newThread4);    
-  }
-
-  threadData->m->activeThreadsNum--;
+  m->activeThreadsNum--;
 
   free(threadData);
   return NULL;
