@@ -83,6 +83,9 @@ bool is_valid_position(int row, int col) {
 
 // Função principal para navegar pelo labirinto
 bool walk(Position pos) {
+    // 4. Verifique se a posição atual é a saída (maze[pos.row][pos.col] == 's')
+    if (maze[pos.row][pos.col] == 's') return true;
+
     // 1. Marque a posição atual como visitada (maze[pos.row][pos.col] = '.')
     maze[pos.row][pos.col] = '.';
 
@@ -92,45 +95,31 @@ bool walk(Position pos) {
     // 3. Adicione um pequeno atraso para visualização:
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
-    // 4. Verifique se a posição atual é a saída (maze[pos.row][pos.col] == 's')
-    if (maze[pos.row][pos.col] == 's') return true;
-    
     // 5. Verifique as posições adjacentes (cima, baixo, esquerda, direita)
-    std::stack<Position> s;
-
     Position adjPos;
     adjPos.row = pos.row + 1;
     adjPos.col = pos.col;
     if (is_valid_position(adjPos.row, adjPos.col)) {
-        s.emplace(adjPos);
+        if (walk(adjPos)) return true;
     }
 
     adjPos.row = pos.row - 1;
     if (is_valid_position(adjPos.row, adjPos.col)) {
-        s.emplace(adjPos);
+        if (walk(adjPos)) return true;        
     }
 
     adjPos.row = pos.row;
     adjPos.col = pos.col + 1;
     if (is_valid_position(adjPos.row, adjPos.col)) {
-        s.emplace(adjPos);
+        if (walk(adjPos)) return true;        
+        
     }
 
     adjPos.col = pos.col - 1;
     if (is_valid_position(adjPos.row, adjPos.col)) {
-        s.emplace(adjPos);
+        if (walk(adjPos)) return true;        
     }
 
-    // 6. Enquanto houver posições válidas na pilha (!valid_positions.empty()):
-    //    a. Remova a próxima posição da pilha (valid_positions.top() e valid_positions.pop())
-    //    b. Chame walk recursivamente para esta posição
-    //    c. Se walk retornar true, propague o retorno (retorne true)
-    while(!s.empty()) {
-        pos = s.top();
-        s.pop();
-
-        if (walk(pos)) return true;
-    }
 
     // 7. Se todas as posições foram exploradas sem encontrar a saída, retorne false    
     return false;
