@@ -74,8 +74,8 @@ void print_maze() {
 // Função para verificar se uma posição é válida
 bool is_valid_position(int row, int col) {
     if (
-        row < 0 || row > num_rows || 
-        col < 0 || col > num_cols
+        row < 0 || row >= num_rows || 
+        col < 0 || col >= num_cols
     ) return false;
 
     return maze[row][col] == 'x' || maze[row][col] == 's';
