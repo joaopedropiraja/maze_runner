@@ -6,11 +6,9 @@
 
 typedef struct maze_s Maze;
 
-Maze *m_create(unsigned rowsNum, unsigned colsNum);
 void m_delete(Maze *m);
 
 Maze *m_loadFromFile(char *fileName);
-bool m_isValidLocation(Maze *m, int row, int col);
 bool m_hasSolution(Maze *m);
 
 void m_print(Maze *m);
