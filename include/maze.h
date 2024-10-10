@@ -6,6 +6,7 @@
 
 typedef struct maze_s Maze;
 
+Maze *m_create(unsigned rowsNum, unsigned colsNum);
 void m_delete(Maze *m);
 
 Maze *m_loadFromFile(char *fileName);

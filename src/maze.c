@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 #include "maze.h"
+#include "array.h"
 #include "msgassert.h"
 
 // Private declarations
@@ -11,13 +12,13 @@ typedef struct thread_data_s {
     Position p;
 } ThreadData;
 
-static Maze *m_create(unsigned rowsNum, unsigned colsNum);
+Maze *m_create(unsigned rowsNum, unsigned colsNum);
 static bool m_isValidLocation(Maze *m, int row, int col);
-static void tryThread(Maze *m, int row, int col);
+static void createThread(Maze *m, int row, int col);
+static void validatePos(Maze *m, int row, int col, Position *nextPos, bool *foundNextPos);
 static void *walk(void *data);
 
 // Implementations
-
 struct maze_s {
     char **data;
     unsigned rowsNum;
@@ -27,7 +28,7 @@ struct maze_s {
     unsigned activeThreadsNum;
 };
 
-static Maze *m_create(unsigned rowsNum, unsigned colsNum) {
+Maze *m_create(unsigned rowsNum, unsigned colsNum) {
     Maze *m = (Maze*)malloc(sizeof(Maze));
     msgassert(m != NULL, "Memory allocation failed for maze: { rowsNum: %u, colsNum: %u }\n", rowsNum, colsNum);
 
@@ -100,9 +101,7 @@ void m_print(Maze *m) {
     printf("\n\n");    
 };
 
-static void tryThread(Maze *m, int row, int col) {
-  if (!m_isValidLocation(m, row, col)) return;
-  
+static void createThread(Maze *m, int row, int col) {
   m->activeThreadsNum++;
 
   ThreadData *threadData = malloc(sizeof(ThreadData));
@@ -114,35 +113,56 @@ static void tryThread(Maze *m, int row, int col) {
   pthread_detach(thread);
 };
 
+static void validatePos(Maze *m, int row, int col, Position *nextPos, bool *foundNextPos) {
+  if (!m_isValidLocation(m, row, col)) return;
+
+  if (*foundNextPos) {
+    createThread(m, row, col);
+  } else {
+    *foundNextPos = true;
+    *nextPos = (Position){ row, col };
+  }
+};
+
 static void *walk(void *data) {
-  sleep_ms(5);
+  sleep_ms(100);
 
   ThreadData *threadData = data;
 
   Maze *m = threadData->m;
   Position p = threadData->p;
   if (m->data[p.row][p.col] == 's') {
+    
     m->foundExit = true;
     m->activeThreadsNum--;
-
     free(threadData);
+
     return NULL;
   }
 
   m->data[p.row][p.col] = '.';
 
+  Position nextPos;
+  bool foundNextPos = false;
+
   // Direita
-  tryThread(m, p.row, p.col + 1);
+  validatePos(m, p.row, p.col + 1, &nextPos, &foundNextPos);
   // Esquerda
-  tryThread(m, p.row, p.col - 1);
+  validatePos(m, p.row, p.col - 1, &nextPos, &foundNextPos); 
   // Em cima
-  tryThread(m, p.row + 1, p.col);
+  validatePos(m, p.row + 1, p.col, &nextPos, &foundNextPos); 
   // Embaixo
-  tryThread(m, p.row - 1, p.col);    
+  validatePos(m, p.row - 1, p.col, &nextPos, &foundNextPos);     
+
+  if (foundNextPos) {
+    threadData->p = nextPos;
+    
+    return walk(threadData);
+  }
 
   m->activeThreadsNum--;
-
   free(threadData);
+  
   return NULL;
 }
 
