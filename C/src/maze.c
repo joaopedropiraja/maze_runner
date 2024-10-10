@@ -102,15 +102,16 @@ void m_print(Maze *m) {
 };
 
 static void createThread(Maze *m, int row, int col) {
-  m->activeThreadsNum++;
-
   ThreadData *threadData = malloc(sizeof(ThreadData));
   threadData->m = m;
   threadData->p = (Position){ row, col };
   
+  m->activeThreadsNum++;
+
   pthread_t thread;
   pthread_create(&thread, NULL, walk, threadData);
   pthread_detach(thread);
+  
 };
 
 static void validatePos(Maze *m, int row, int col, Position *nextPos, bool *foundNextPos) {
