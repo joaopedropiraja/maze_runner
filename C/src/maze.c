@@ -6,6 +6,9 @@
 #include "array.h"
 #include "msgassert.h"
 
+#define PRINT_DELAY 50
+#define THREAD_DELAY 50
+
 // Private declarations
 typedef struct thread_data_s {
     Maze *m;
@@ -98,7 +101,7 @@ void m_print(Maze *m) {
         printf("\n");
     }
 
-    printf("\n\n");    
+    printf("\033[%dA", m->rowsNum);    
 };
 
 static void createThread(Maze *m, int row, int col) {
@@ -126,7 +129,7 @@ static void validatePos(Maze *m, int row, int col, Position *nextPos, bool *foun
 };
 
 static void *walk(void *data) {
-  sleep_ms(100);
+  sleep_ms(THREAD_DELAY);
 
   ThreadData *threadData = data;
 
@@ -181,8 +184,10 @@ bool m_hasSolution(Maze *m) {
 
   while (!m->foundExit && m->activeThreadsNum > 0) {
     m_print(m);
-    sleep_ms(50);
+    sleep_ms(PRINT_DELAY);
   }
+
+  printf("\033[%dB", m->rowsNum);
 
   return m->foundExit;
 };
