@@ -32,7 +32,7 @@ Position load_maze(const std::string& file_name) {
     // 1. Abra o arquivo especificado por file_name usando std::ifstream
     std::ifstream file(file_name);
     if (!file) {
-        std::cout << "Error opening file: " << file_name << "." << std::endl;
+        std::cout << "Erro ao abrir o arquivo: " << file_name << "." << std::endl;
         exit(EXIT_FAILURE);
     }
 

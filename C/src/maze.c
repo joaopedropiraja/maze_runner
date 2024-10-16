@@ -171,7 +171,6 @@ static void *walk(void *data) {
 }
 
 bool m_hasSolution(Maze *m) {
-
   pthread_t startThread;
   ThreadData *threadData = malloc(sizeof(ThreadData));
   
